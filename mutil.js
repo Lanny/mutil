@@ -25,6 +25,7 @@ const getDb = async (args) => {
         albumartist         TEXT    NOT NULL,
         album               TEXT    NOT NULL,
         title               TEXT    NOT NULL,
+        duration            INTEGER DEFAULT 0 NOT NULL,
         musicbrainz_trackid TEXT,
         at                  INTEGER NOT NULL
       );
@@ -116,12 +117,14 @@ const commands = {
               album,
               title,
               musicbrainz_trackid,
+              duration,
               at
             ) VALUES (
               ${status.albumartist || status.artist},
               ${status.album},
               ${status.title},
               ${status.musicbrainz_trackid},
+              ${status.duration},
               ${~~(Date.now() / 1000)}
             )
           `
