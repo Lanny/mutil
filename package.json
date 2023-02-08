@@ -1,0 +1,21 @@
+{
+  "name": "mutil",
+  "version": "0.0.1",
+  "description": "Lanny's music utility junk",
+  "main": "mutil.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "cmus",
+    "beets",
+    "music"
+  ],
+  "author": "Ryan \"Lanny\" Jenkins",
+  "license": "GPL-3.0",
+  "dependencies": {
+    "sqlite-tag": "^1.3.2",
+    "sqlite3": "^5.1.4",
+    "yargs": "^17.6.2"
+  }
+}
