@@ -35,6 +35,25 @@ const getDb = async (args) => {
   return db
 }
 
+const formatDuration = (seconds) => {
+  let rSecs = seconds
+  const days = ~~(rSecs / (60 * 60 * 24))
+  rSecs -= days * (60 * 60 * 24)
+  const hours = ~~(rSecs / (60 * 60))
+  rSecs -= hours * (60 * 60)
+  const minutes = ~~(rSecs / 60)
+  rSecs -= minutes * 60
+  return [
+    [days, 'days'],
+    [hours, 'hours'],
+    [minutes, 'minutes'],
+    [rSecs, 'seconds']
+  ]
+  .filter(([v]) => !!v)
+  .map(([v, l]) => `${v} ${l}`)
+  .join(', ')
+}
+
 const issueCmusCmd = (cmd) => {
   return new Promise((res, rej) => {
     const client = net.createConnection('/Users/ryan.jenkins/.config/cmus/socket')
@@ -152,7 +171,10 @@ const commands = {
     `
 
     const byAlbum = {}
+    let cumTime = 0
     scrobs.forEach((scrob) => {
+      cumTime += scrob.duration
+
       const key = `${scrob.album} - ${scrob.albumartist}`
       if (!(key in byAlbum)) byAlbum[key] = []
       byAlbum[key].push(scrob)
@@ -164,6 +186,7 @@ const commands = {
 
     const report = [
       `You've scrobbled ${scrobs.length} times today.`,
+      `Total listen time: ${formatDuration(cumTime)}`,
       '',
       'Top Albums:',
       ...topAlbums.map(([key, scrobs]) => `${scrobs.length}\t${key}`)
