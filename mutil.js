@@ -44,13 +44,13 @@ const formatDuration = (seconds) => {
   const minutes = ~~(rSecs / 60)
   rSecs -= minutes * 60
   return [
-    [days, 'days'],
-    [hours, 'hours'],
-    [minutes, 'minutes'],
-    [rSecs, 'seconds']
+    [days, 'day'],
+    [hours, 'hour'],
+    [minutes, 'minute'],
+    [rSecs, 'second']
   ]
   .filter(([v]) => !!v)
-  .map(([v, l]) => `${v} ${l}`)
+  .map(([v, l]) => `${v} ${l}${v > 1 ? 's' : ''}`)
   .join(', ')
 }
 
