@@ -16,8 +16,8 @@ const getDb = async (args) => {
     FROM sqlite_schema
     WHERE type = 'table' AND name = 'scrobs';
   `
-
   if (!scrobTable) {
+
     console.log('Creating scrob table')
     await db.query`
       CREATE TABLE scrobs (
@@ -70,7 +70,7 @@ const compileSVG = (svg, opts) => {
 
 const makeBarChart = (data, opts) => {
   const pW = opts.width
-  const pH = opts.height
+  const pH = opts.height - 40
 
   const bP = opts.barPad || 0
   const bW = (pW / data.length) - bP
@@ -88,9 +88,22 @@ const makeBarChart = (data, opts) => {
     }
   })
 
+  const labels = data.map((datum, idx) => {
+    return {
+      tag: 'text',
+      children: datum.label,
+      x: idx * (bW + bP) + (bW / 2),
+      y: pH + 20,
+      'font-size': 20,
+      'dominant-baseline': 'middle',
+      'text-anchor': 'middle',
+      'fill': '#0F0',
+    }
+  })
+
   return {
     tag: 'g',
-    children: bars
+    children: [...bars, ...labels]
   }
 }
 
