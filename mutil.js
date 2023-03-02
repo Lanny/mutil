@@ -35,6 +35,65 @@ const getDb = async (args) => {
   return db
 }
 
+const _compileSvgEl = (el, parts, d) => {
+  const { tag, children, ...attrs } = el
+  const indent = new Array(d).fill(' ').join('')
+  parts.push(indent, '<', tag)
+
+  for (const [key, val] of Object.entries(attrs)) {
+    parts.push(' ', key, '="', val, '"')
+  }
+
+  if (children) {
+    parts.push('>\n')
+
+    if (typeof children === 'string') {
+      parts.push(indent, '  ', children, '\n')
+    } else {
+      for (const child of children) {
+        _compileSvgEl(child, parts, d+1)
+      }
+    }
+
+    parts.push(indent, '</', tag, '>\n')
+  } else {
+    parts.push(' />\n')
+  }
+}
+
+const compileSVG = (svg, opts) => {
+  const parts = []
+  _compileSvgEl(svg, parts, 0)
+
+  return parts.join('')
+}
+
+const makeBarChart = (data, opts) => {
+  const pW = opts.width
+  const pH = opts.height
+
+  const bP = opts.barPad || 0
+  const bW = (pW / data.length) - bP
+  const yMax = Math.max(...data.map(d => d.value))
+
+  const bars = data.map((datum, idx) => {
+    const height = (datum.value / yMax) * pH
+    return {
+      tag: 'rect',
+      fill: '#0F0',
+      width: bW,
+      height,
+      x: idx * (bW + bP),
+      y: pH - height,
+    }
+  })
+
+  return {
+    tag: 'g',
+    children: bars
+  }
+}
+
 const formatDuration = (seconds) => {
   let rSecs = seconds
   const days = ~~(rSecs / (60 * 60 * 24))
@@ -193,6 +252,46 @@ const commands = {
     ]
 
     console.log(report.join('\n'))
+  },
+  timeChart: async (args) => {
+    const h = 200
+    const w = 400
+
+    const svg = {
+      tag: 'svg',
+      viewBox: `0 0 ${w} ${h}`,
+      xmlns: 'http://www.w3.org/2000/svg',
+      children: [
+        /*
+        {
+          tag: 'path',
+          d: 'M66,0h39v93zM38,0h-38v93zM52,35l25,58h-16l-8-18h-18z',
+          fill: '#0F0',
+        },
+        {
+          tag: 'text',
+          children: 'Hello World',
+          x: 0,
+          y: 50,
+        }
+        */
+        makeBarChart([
+          { label: 'Mon', value: 42 },
+          { label: 'Tue', value: 32 },
+          { label: 'Wed', value: 22 },
+          { label: 'Thu', value: 12 },
+          { label: 'Fri', value: 02 },
+          { label: 'Sat', value: 20 },
+          { label: 'Sun', value: 50 },
+        ], {
+          width: w,
+          height: h,
+          barPad: 5,
+        })
+      ]
+    }
+
+    console.log(compileSVG(svg))
   }
 }
 
@@ -218,6 +317,11 @@ yargs
     command: 'today',
     describe: 'report on today\'s scrobs',
     handler: commands.today
+  })
+  .command({
+    command: 'time-chart',
+    describe: '',
+    handler: commands.timeChart
   })
   .strictCommands()
   .demandCommand(1)
