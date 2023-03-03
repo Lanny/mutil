@@ -69,9 +69,19 @@ const compileSVG = (svg, opts) => {
   return parts.join('')
 }
 
+const svgTrans = (content, x, y) => {
+  return {
+    tag: 'g',
+    transform: `translate(${x} ${y})`,
+    children: Array.isArray(content) ? content : content
+  }
+}
+
 const makeBarChart = (data, opts) => {
-  const pW = opts.width
-  const pH = opts.height - 40
+  const pad = opts.pad || opts.height * 0.05
+
+  const pW = opts.width - pad * 2
+  const pH = opts.height - 25 - pad * 2
 
   const bP = opts.barPad || 0
   const bW = (pW / data.length) - bP
@@ -81,7 +91,7 @@ const makeBarChart = (data, opts) => {
     const height = (datum.value / yMax) * pH
     return {
       tag: 'rect',
-      fill: '#0F0',
+      fill: '#000',
       width: bW,
       height,
       x: idx * (bW + bP),
@@ -94,17 +104,20 @@ const makeBarChart = (data, opts) => {
       tag: 'text',
       children: datum.label,
       x: idx * (bW + bP) + (bW / 2),
-      y: pH + 20,
+      y: 0,
       'font-size': 20,
       'dominant-baseline': 'middle',
       'text-anchor': 'middle',
-      'fill': '#0F0',
+      'fill': '#000',
     }
   })
 
   return {
     tag: 'g',
-    children: [...bars, ...labels]
+    children: [
+      svgTrans(bars, pad, pad),
+      svgTrans(labels, pad, pad + pH + 25),
+    ]
   }
 }
 
@@ -289,8 +302,8 @@ const commands = {
       data.push({ label: dow, value: counts[dow] || 0 })
     }
 
-    const h = 200
-    const w = 400
+    const h = 300
+    const w = 600
 
     const svg = {
       tag: 'svg',
