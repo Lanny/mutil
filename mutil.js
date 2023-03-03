@@ -77,11 +77,54 @@ const svgTrans = (content, x, y) => {
   }
 }
 
+const yAxis = (max, h, nTicks) => {
+  const rDist = h / nTicks
+  const dDist = Math.ceil(nTicks / max)
+
+  return [
+    {
+      tag: 'line',
+      x1: 30,
+      y1: 0,
+      x2: 30,
+      y2: h,
+      stroke: '#000',
+      'stroke-width': 1,
+    },
+    ...(new Array(nTicks + 1)).fill(null).map((_,i) => {
+      const comps = [
+        {
+          tag: 'line',
+          x1: 25,
+          x2: 30,
+          y1: 0,
+          y2: 0,
+          stroke: '#000',
+          'stroke-width': 1,
+        },
+        {
+          tag: 'text',
+          children: (i / nTicks * max).toFixed(0),
+          'text-anchor': 'end',
+          'font-size': 20,
+          x: 20,
+          y: 7,
+        }
+      ]
+
+      return svgTrans(comps, 0, h - i * rDist)
+    })
+  ]
+}
+
 const makeBarChart = (data, opts) => {
   const pad = opts.pad || opts.height * 0.05
 
-  const pW = opts.width - pad * 2
-  const pH = opts.height - 25 - pad * 2
+  const lGut = 40
+  const bGut = 25
+
+  const pW = opts.width - lGut - pad * 2
+  const pH = opts.height - bGut - pad * 2
 
   const bP = opts.barPad || 0
   const bW = (pW / data.length) - bP
@@ -112,11 +155,14 @@ const makeBarChart = (data, opts) => {
     }
   })
 
+  const yAx = yAxis(yMax, pH, 5)
+
   return {
     tag: 'g',
     children: [
-      svgTrans(bars, pad, pad),
-      svgTrans(labels, pad, pad + pH + 25),
+      svgTrans(bars, pad + lGut, pad),
+      svgTrans(labels, pad + lGut, pad + pH + bGut),
+      svgTrans(yAx, pad, pad)
     ]
   }
 }
@@ -195,8 +241,9 @@ const commands = {
 
     while (true) {
       const status = await getCmusStatus()
+      const artistish = status.albumartist || status.artist
       const trackId = [
-        status.albumartist || status.artist,
+        artistish,
         status.album,
         status.title
       ].join('::')
@@ -204,7 +251,7 @@ const commands = {
       const timeToScrob = Math.min(240000, status.duration * 500)
       const p = status.status === 'playing' ? '\u25B6\uFE0F': '\u23F8 '
       const s = scrobd ? '✓' : ~~((playTime * 100) / timeToScrob) + '%'
-      output(`${p} ${status.albumartist} - ${status.title} | ${s}`)
+      output(`${p} ${artistish} - ${status.title} | ${s}`)
 
       if (trackId === lastTrackId && status.status === 'playing') {
         playTime += Date.now() - lastPollTime
@@ -225,7 +272,7 @@ const commands = {
               duration,
               at
             ) VALUES (
-              ${status.albumartist || status.artist},
+              ${artistish},
               ${status.album},
               ${status.title},
               ${status.musicbrainz_trackid},
