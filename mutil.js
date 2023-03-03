@@ -4,6 +4,7 @@ const yargs = require('yargs')
 const net = require('net')
 const sqlite3 = require('sqlite3').verbose()
 const SQLiteTag = require('sqlite-tag')
+const { subDays, startOfDay, eachDayOfInterval, format } = require('date-fns')
 
 const sleep = (d) => new Promise((res) => setTimeout(res, d))
 
@@ -267,6 +268,27 @@ const commands = {
     console.log(report.join('\n'))
   },
   timeChart: async (args) => {
+    const db = await getDb(args)
+    const now = new Date()
+    const start = startOfDay(subDays(now, 6))
+
+    const scrobs = await db.all`
+      SELECT * FROM scrobs WHERE at > ${start.valueOf() / 1000};
+    `
+
+    const counts = {}
+    for (const scrob of scrobs) {
+      const dow = format(new Date(scrob.at * 1000), 'E')
+      counts[dow] = (counts[dow] || 0) + 1
+    }
+
+    const days = eachDayOfInterval({ start, end: now })
+    const data = []
+    for (const d of days) {
+      const dow = format(d, 'E')
+      data.push({ label: dow, value: counts[dow] || 0 })
+    }
+
     const h = 200
     const w = 400
 
@@ -275,28 +297,7 @@ const commands = {
       viewBox: `0 0 ${w} ${h}`,
       xmlns: 'http://www.w3.org/2000/svg',
       children: [
-        /*
-        {
-          tag: 'path',
-          d: 'M66,0h39v93zM38,0h-38v93zM52,35l25,58h-16l-8-18h-18z',
-          fill: '#0F0',
-        },
-        {
-          tag: 'text',
-          children: 'Hello World',
-          x: 0,
-          y: 50,
-        }
-        */
-        makeBarChart([
-          { label: 'Mon', value: 42 },
-          { label: 'Tue', value: 32 },
-          { label: 'Wed', value: 22 },
-          { label: 'Thu', value: 12 },
-          { label: 'Fri', value: 02 },
-          { label: 'Sat', value: 20 },
-          { label: 'Sun', value: 50 },
-        ], {
+        makeBarChart(data, {
           width: w,
           height: h,
           barPad: 5,

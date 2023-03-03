@@ -14,6 +14,7 @@
   "author": "Ryan \"Lanny\" Jenkins",
   "license": "GPL-3.0",
   "dependencies": {
+    "date-fns": "^2.29.3",
     "sqlite-tag": "^1.3.2",
     "sqlite3": "^5.1.4",
     "yargs": "^17.6.2"
